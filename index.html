@@ -739,7 +739,14 @@
     function showScreen(screen) {
       coverScreen.classList.toggle("active", screen === "cover");
       resultScreen.classList.toggle("active", screen === "result");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      requestAnimationFrame(() => {
+        if (screen === "result") {
+          resultScreen.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          coverScreen.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
     }
 
     function openResults(categoryId = "all", query = "") {
