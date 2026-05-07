@@ -737,16 +737,23 @@
     }
 
     function showScreen(screen) {
-      coverScreen.classList.toggle("active", screen === "cover");
-      resultScreen.classList.toggle("active", screen === "result");
+      if (screen === "result") {
+        // 표지는 그대로 두고 결과 화면을 아래에 열어야 실제로 아래로 스크롤됩니다.
+        coverScreen.classList.add("active");
+        resultScreen.classList.add("active");
 
-      requestAnimationFrame(() => {
-        if (screen === "result") {
+        setTimeout(() => {
           resultScreen.scrollIntoView({ behavior: "smooth", block: "start" });
-        } else {
-          coverScreen.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      });
+        }, 80);
+        return;
+      }
+
+      coverScreen.classList.add("active");
+      coverScreen.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      setTimeout(() => {
+        resultScreen.classList.remove("active");
+      }, 320);
     }
 
     function openResults(categoryId = "all", query = "") {
