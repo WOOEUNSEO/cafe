@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gufhub 비품 위치 찾기</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --card: rgba(255, 255, 255, 0.88);
+      --text: #202020;
+      --muted: #6f6a62;
+      --line: #e7e0d6;
+      --primary: #1f2a24;
+      --primary-2: #355143;
+      --accent: #dfb86c;
+      --accent-soft: #fff4dc;
+      --danger: #c66a52;
+      --shadow: 0 20px 60px rgba(35, 31, 26, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", Segoe UI, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(223, 184, 108, 0.26), transparent 34%),
+        radial-gradient(circle at top right, rgba(53, 81, 67, 0.15), transparent 32%),
+        var(--bg);
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 60px;
+    }
+
+    .screen { display: none; animation: fadeIn 0.28s ease both; }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero {
+      min-height: calc(100vh - 96px);
+      display: grid;
+      place-items: center;
+    }
+
+    .hero-card {
+      width: 100%;
+      padding: clamp(28px, 5vw, 56px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 239, 0.74));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      border-radius: 999px;
+      background: rgba(223, 184, 108, 0.22);
+      right: -120px;
+      top: -160px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--primary-2);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 22px 0 12px;
+      font-size: clamp(42px, 9vw, 88px);
+      line-height: 0.94;
+      letter-spacing: -0.07em;
+      color: var(--primary);
+    }
+
+    .hero-copy {
+      max-width: 620px;
+      margin: 0 0 34px;
+      color: var(--muted);
+      font-size: clamp(16px, 2.5vw, 19px);
+      line-height: 1.7;
+    }
+
+    .quick-search {
+      display: flex;
+      gap: 10px;
+      max-width: 620px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .search-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: white;
+      padding: 0 16px;
+      box-shadow: 0 10px 24px rgba(35, 31, 26, 0.06);
+    }
+
+    .search-box span { color: var(--muted); }
+
+    .search-box input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      padding: 17px 0;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 18px;
+      padding: 0 22px;
+      min-height: 54px;
+      cursor: pointer;
+      font-weight: 900;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      color: white;
+      background: var(--primary);
+      box-shadow: 0 14px 24px rgba(31, 42, 36, 0.2);
+    }
+
+    .btn-ghost {
+      color: var(--primary);
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .category-card {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--card);
+      padding: 22px;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(35, 31, 26, 0.07);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .category-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(223, 184, 108, 0.9);
+      box-shadow: 0 18px 34px rgba(35, 31, 26, 0.11);
+    }
+
+    .category-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: var(--accent-soft);
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .category-card h2 {
+      margin: 0 0 8px;
+      color: var(--primary);
+      font-size: 21px;
+      letter-spacing: -0.03em;
+    }
+
+    .category-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .category-meta {
+      color: var(--primary-2);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .topbar h2 {
+      margin: 0 0 8px;
+      color: var(--primary);
+      font-size: clamp(28px, 5vw, 44px);
+      letter-spacing: -0.05em;
+    }
+
+    .topbar p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .panel {
+      border: 1px solid rgba(255,255,255,0.72);
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,0.82);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 18px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--muted);
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .chip.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: white;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(53, 81, 67, 0.35);
+      box-shadow: 0 12px 22px rgba(35, 31, 26, 0.08);
+    }
+
+    .item-name {
+      display: block;
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: -0.025em;
+      margin-bottom: 5px;
+    }
+
+    .item-sub {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .location-pill {
+      justify-self: end;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #7a5522;
+      padding: 8px 11px;
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .location-pill.unknown {
+      background: #f9ece7;
+      color: var(--danger);
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.55);
+      padding: 34px 18px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(31, 42, 36, 0.36);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: min(460px, 100%);
+      border-radius: 28px;
+      background: white;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+      padding: 24px;
+      animation: pop 0.18s ease both;
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .modal h3 {
+      margin: 0;
+      color: var(--primary);
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .modal .sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .close {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .location-box {
+      border-radius: 22px;
+      background: var(--accent-soft);
+      padding: 20px;
+    }
+
+    .location-label {
+      color: #7a5522;
+      font-size: 13px;
+      font-weight: 950;
+      margin-bottom: 8px;
+    }
+
+    .location-value {
+      color: var(--primary);
+      font-size: 30px;
+      font-weight: 1000;
+      letter-spacing: -0.05em;
+    }
+
+    .location-help {
+      margin-top: 10px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 760px) {
+      .app { width: min(100% - 22px, 1040px); padding-top: 18px; }
+      .hero { min-height: auto; padding: 20px 0; }
+      .hero-card { padding: 26px 18px; }
+      .quick-search { flex-direction: column; }
+      .btn { width: 100%; }
+      .category-grid { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; }
+      .filters { grid-template-columns: 1fr; }
+      .item-card { grid-template-columns: 1fr; }
+      .location-pill { justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="coverScreen" class="screen active hero" aria-label="표지 화면">
+      <div class="hero-card">
+        <div class="eyebrow">☕ gufhub location helper</div>
+        <h1>카페 비품<br />위치 찾기</h1>
+        <p class="hero-copy">
+          카테고리를 먼저 고르거나 품목명을 바로 검색하세요. 결과는 보기 편하게 가나다순으로 정렬되고,
+          비품 이름을 누르면 가져와야 할 위치를 알려줍니다.
+        </p>
+
+        <div class="quick-search">
+          <label class="search-box" for="homeSearch">
+            <span>⌕</span>
+            <input id="homeSearch" type="search" placeholder="예: 우유, 20oz 컵, 손세정제" autocomplete="off" />
+          </label>
+          <button class="btn btn-primary" id="homeSearchBtn">전체 검색</button>
+        </div>
+
+        <div class="category-grid" id="categoryGrid"></div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen" aria-label="결과 화면">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">선택한 카테고리</div>
+          <h2 id="resultTitle">전체 품목</h2>
+          <p id="resultDescription">품목을 누르면 위치가 표시됩니다.</p>
+        </div>
+        <button class="btn btn-ghost" id="backBtn">← 표지로</button>
+      </div>
+
+      <div class="panel">
+        <div class="filters">
+          <label class="search-box" for="resultSearch">
+            <span>⌕</span>
+            <input id="resultSearch" type="search" placeholder="품목명 또는 중분류 검색" autocomplete="off" />
+          </label>
+          <button class="btn btn-primary" id="resetBtn">필터 초기화</button>
+        </div>
+        <div class="chips" id="subCategoryChips" aria-label="중분류 필터"></div>
+        <div class="summary">
+          <strong id="countText">0개</strong>
+          <span>가나다순 정렬</span>
+        </div>
+        <div class="list" id="itemList"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h3 id="modalTitle">품목명</h3>
+          <div class="sub" id="modalSub">대분류 · 중분류</div>
+        </div>
+        <button class="close" id="closeModal" aria-label="닫기">×</button>
+      </div>
+      <div class="location-box">
+        <div class="location-label">위치 안내</div>
+        <div class="location-value" id="modalLocation">위치 미정</div>
+        <div class="location-help" id="modalHelp">아직 위치가 입력되지 않았습니다.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="confirmModal">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const categories = [
+      {
+        id: "food",
+        name: "식재료 / 판매상품",
+        icon: "🥛",
+        description: "가루류, 액상류, 실온·냉장·냉동 식재료와 판매상품",
+      },
+      {
+        id: "packaging",
+        name: "포장 / 제공 소모품",
+        icon: "🥤",
+        description: "컵, 리드, 트레이, 제공용품, 포장 보조품",
+      },
+      {
+        id: "operation",
+        name: "운영 / 위생 비품",
+        icon: "🧽",
+        description: "위생 작업용품, 청소용품, 세탁용품, 운영 사무용품",
+      },
+    ];
+
+    const items = [
+      { major: "식재료 / 판매상품", middle: "가루류", name: "밀크파우더", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "요거트파우더", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "미숫가루", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "녹차가루", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "우베파우더", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "시나몬 파우더", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "파슬리", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "후추", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "츄러스가루", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "갈릭시즈닝", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "가루류", name: "스키피시즈닝", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "올리브유", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "위스키", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "그린애플시럽", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "멘타쿠바노시럽", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "얼그레이베이스", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "후르츠베이스", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "밀크티베이스", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "블루베리베이스", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "바닐라시럽", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "오렌지", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "자몽베이스", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "액상류", name: "애플망고베이스", location: "사무실-배송" },
+      { major: "식재료 / 판매상품", middle: "실온 식재료", name: "원두", location: "B2 홀수창고" },
+      { major: "식재료 / 판매상품", middle: "실온 식재료", name: "팝콘옥수수", location: "B2 창고" },
+      { major: "식재료 / 판매상품", middle: "실온 식재료", name: "건레몬칩", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "실온 식재료", name: "티백", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "탄산수", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "우유", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "햄", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "치즈", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "오이", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "살구잼", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "초코베이스", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉장 식재료", name: "딸기베이스", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "마르게리따 치킨 파니니", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "치킨 가라아게", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "나초", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "프라이", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "츄러스", location: "" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "깐쇼새우", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "알새우칩", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "프렌치빈", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "쿠키", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "미니크루아상생지", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "다진마늘", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "세블럭소시지", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "냉동 식재료", name: "모둠소시지", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "케찹", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "어니언마요", location: "메인컨" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "마요네즈", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "살사소스", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "치즈소스", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "토마토소스", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "소스류", name: "바질페스토", location: "배송" },
+      { major: "식재료 / 판매상품", middle: "판매상품", name: "굿즈", location: "사무실" },
+      { major: "식재료 / 판매상품", middle: "판매상품", name: "카라멜치즈팝콘", location: "사무실-B2 홀수창고" },
+
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "20oz 컵", location: "사무실-B2 홀수창고" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "20oz 리드", location: "사무실-B2 홀수창고" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "13oz 컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "13oz 리드", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "14oz 컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "14oz 리드", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "1oz 컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "1oz 리드", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "2oz 컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "2oz 리드", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "3.2oz 컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "92oz 컵", location: "사무실-B2 홀수창고" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "92oz 리드", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "46oz 컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "컵 / 리드", name: "46oz 리드", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "반반 칸막이", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "직사각트레이", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "직사각트레이 뚜껑", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "팝콘트레이", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "팝콘 뚜껑", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "펄프트레이", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "펄프트레이 뚜껑", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "트레이 / 용기", name: "머핀컵", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "제공용품", name: "빨대", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "제공용품", name: "냅킨", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "제공용품", name: "물티슈", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "제공용품", name: "포크", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "제공용품", name: "컵홀더", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "포장 보조", name: "비닐봉지", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "포장 보조", name: "지퍼백", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "포장 보조", name: "트레이속지", location: "사무실" },
+      { major: "포장 / 제공 소모품", middle: "포장 보조", name: "스티커", location: "사무실" },
+
+      { major: "운영 / 위생 비품", middle: "위생 / 작업용", name: "비닐장갑", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "위생 / 작업용", name: "라텍스장갑", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "위생 / 작업용", name: "손세정제", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "청소용품", name: "더스터", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "청소용품", name: "주방세제", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "청소용품", name: "호클러", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "청소용품", name: "수세미", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "청소용품", name: "고무장갑", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "세탁용품", name: "세탁세제", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "세탁용품", name: "섬유유연제", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "운영 사무용", name: "영수증 용지", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "운영 사무용", name: "포스터", location: "사무실" },
+    ];
+
+    const categoryMap = {
+      "식재료 / 판매상품": "food",
+      "포장 / 제공 소모품": "packaging",
+      "운영 / 위생 비품": "operation",
+    };
+
+    const locationGuides = {
+      "사무실": "사무실에서 가져와야 하는 품목입니다.",
+      "배송": "배송으로 들어오는 품목입니다.",
+      "메인컨": "메인컨으로 가야 하는 품목입니다.",
+      "B2 홀수창고": "B2 홀수창고로 가야 하는 품목입니다.",
+      "B2 창고": "B2 창고로 가야 하는 품목입니다.",
+      "사무실-배송": "사무실을 먼저 확인하고, 없으면 배송 입고를 확인하세요.",
+      "사무실-B2 홀수창고": "사무실을 먼저 확인하고, 없으면 B2 홀수창고를 확인하세요.",
+      "": "아직 위치가 입력되지 않은 품목입니다.",
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const categoryGrid = $("#categoryGrid");
+    const coverScreen = $("#coverScreen");
+    const resultScreen = $("#resultScreen");
+    const homeSearch = $("#homeSearch");
+    const resultSearch = $("#resultSearch");
+    const resultTitle = $("#resultTitle");
+    const resultDescription = $("#resultDescription");
+    const subCategoryChips = $("#subCategoryChips");
+    const itemList = $("#itemList");
+    const countText = $("#countText");
+    const modalBackdrop = $("#modalBackdrop");
+
+    let currentCategory = "all";
+    let currentSubCategory = "all";
+
+    function normalize(text) {
+      return String(text || "").replace(/\s/g, "").toLowerCase();
+    }
+
+    function sortedItems(list) {
+      return [...list].sort((a, b) => a.name.localeCompare(b.name, "ko-KR", { numeric: true }));
+    }
+
+    function getCategoryItems(categoryId) {
+      if (categoryId === "all") return items;
+      return items.filter((item) => categoryMap[item.major] === categoryId);
+    }
+
+    function showScreen(screen) {
+      coverScreen.classList.toggle("active", screen === "cover");
+      resultScreen.classList.toggle("active", screen === "result");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openResults(categoryId = "all", query = "") {
+      currentCategory = categoryId;
+      currentSubCategory = "all";
+      const category = categories.find((c) => c.id === categoryId);
+
+      resultTitle.textContent = category ? category.name : "전체 품목";
+      resultDescription.textContent = category
+        ? category.description
+        : "전체 카테고리에서 품목명 또는 중분류로 검색합니다.";
+
+      resultSearch.value = query;
+      renderSubCategoryChips();
+      renderItems();
+      showScreen("result");
+      setTimeout(() => resultSearch.focus(), 120);
+    }
+
+    function renderCategories() {
+      categoryGrid.innerHTML = categories.map((category) => {
+        const count = getCategoryItems(category.id).length;
+        return `
+          <button class="category-card" type="button" data-category="${category.id}">
+            <div class="category-icon">${category.icon}</div>
+            <h2>${category.name}</h2>
+            <p>${category.description}</p>
+            <div class="category-meta">${count}개 품목 보기 →</div>
+          </button>
+        `;
+      }).join("");
+
+      categoryGrid.querySelectorAll(".category-card").forEach((button) => {
+        button.addEventListener("click", () => openResults(button.dataset.category));
+      });
+    }
+
+    function renderSubCategoryChips() {
+      const subCategories = [...new Set(getCategoryItems(currentCategory).map((item) => item.middle))]
+        .sort((a, b) => a.localeCompare(b, "ko-KR", { numeric: true }));
+
+      const chips = ["all", ...subCategories].map((sub) => {
+        const label = sub === "all" ? "전체" : sub;
+        const active = sub === currentSubCategory ? "active" : "";
+        return `<button class="chip ${active}" type="button" data-sub="${sub}">${label}</button>`;
+      }).join("");
+
+      subCategoryChips.innerHTML = chips;
+      subCategoryChips.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          currentSubCategory = chip.dataset.sub;
+          renderSubCategoryChips();
+          renderItems();
+        });
+      });
+    }
+
+    function getFilteredItems() {
+      const query = normalize(resultSearch.value);
+      return sortedItems(getCategoryItems(currentCategory).filter((item) => {
+        const matchesSub = currentSubCategory === "all" || item.middle === currentSubCategory;
+        const haystack = normalize(`${item.name} ${item.middle} ${item.major} ${item.location}`);
+        return matchesSub && (!query || haystack.includes(query));
+      }));
+    }
+
+    function renderItems() {
+      const filtered = getFilteredItems();
+      countText.textContent = `${filtered.length}개`;
+
+      if (!filtered.length) {
+        itemList.innerHTML = `<div class="empty">검색 결과가 없습니다.<br />띄어쓰기를 빼거나 다른 단어로 다시 검색해보세요.</div>`;
+        return;
+      }
+
+      itemList.innerHTML = filtered.map((item, index) => {
+        const safeLocation = item.location || "위치 미정";
+        return `
+          <button class="item-card" type="button" data-index="${index}">
+            <span>
+              <span class="item-name">${item.name}</span>
+              <span class="item-sub">${item.major} · ${item.middle}</span>
+            </span>
+            <span class="location-pill ${item.location ? "" : "unknown"}">${safeLocation}</span>
+          </button>
+        `;
+      }).join("");
+
+      itemList.querySelectorAll(".item-card").forEach((button, index) => {
+        button.addEventListener("click", () => openModal(filtered[index]));
+      });
+    }
+
+    function openModal(item) {
+      const location = item.location || "위치 미정";
+      $("#modalTitle").textContent = item.name;
+      $("#modalSub").textContent = `${item.major} · ${item.middle}`;
+      $("#modalLocation").textContent = location;
+      $("#modalHelp").textContent = locationGuides[item.location] || `${location} 위치를 확인하세요.`;
+      modalBackdrop.classList.add("open");
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("open");
+    }
+
+    function searchFromCover() {
+      openResults("all", homeSearch.value.trim());
+    }
+
+    renderCategories();
+
+    $("#homeSearchBtn").addEventListener("click", searchFromCover);
+    homeSearch.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") searchFromCover();
+    });
+
+    $("#backBtn").addEventListener("click", () => showScreen("cover"));
+    $("#resetBtn").addEventListener("click", () => {
+      resultSearch.value = "";
+      currentSubCategory = "all";
+      renderSubCategoryChips();
+      renderItems();
+      resultSearch.focus();
+    });
+
+    resultSearch.addEventListener("input", renderItems);
+    $("#closeModal").addEventListener("click", closeModal);
+    $("#confirmModal").addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === modalBackdrop) closeModal();
+    });
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeModal();
+    });
+  </script>
+</body>
+</html>
