@@ -108,21 +108,17 @@
       color: var(--primary);
     }
 
-    .hero-copy {
-      max-width: 620px;
-      margin: 0 0 34px;
-      color: var(--muted);
-      font-size: clamp(16px, 2.5vw, 19px);
-      line-height: 1.7;
-    }
-
     .quick-search {
       display: flex;
       gap: 10px;
       max-width: 620px;
-      margin-bottom: 28px;
+      margin: 28px 0 28px;
       position: relative;
       z-index: 1;
+    }
+
+    .cover-search {
+      margin-top: 28px;
     }
 
     .search-box {
@@ -171,6 +167,28 @@
       color: var(--primary);
       background: white;
       border: 1px solid var(--line);
+    }
+
+    .back-icon {
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--primary);
+      box-shadow: 0 8px 18px rgba(35, 31, 26, 0.08);
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 900;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .back-icon:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(35, 31, 26, 0.12);
     }
 
     .category-grid {
@@ -507,12 +525,7 @@
       <div class="hero-card">
         <div class="eyebrow">THE BOUTIQUE</div>
         <h1>카페 비품<br />위치 찾기</h1>
-        <p class="hero-copy">
-          카테고리를 먼저 고르거나 품목명을 바로 검색하세요. 결과는 보기 편하게 가나다순으로 정렬되고,
-          비품 이름을 누르면 가져와야 할 위치를 알려줍니다.
-        </p>
-
-        <div class="quick-search">
+        <div class="quick-search cover-search">
           <label class="search-box" for="homeSearch">
             <span>⌕</span>
             <input id="homeSearch" type="search" placeholder="예: 우유, 20oz 컵, 손세정제" autocomplete="off" />
@@ -531,7 +544,7 @@
           <h2 id="resultTitle">전체 품목</h2>
           <p id="resultDescription">품목을 누르면 위치가 표시됩니다.</p>
         </div>
-        <button class="btn btn-ghost" id="backBtn">← 표지로</button>
+        <button class="back-icon" id="backBtn" aria-label="표지로 돌아가기" title="표지로 돌아가기">←</button>
       </div>
 
       <div class="panel">
@@ -696,7 +709,7 @@
       { major: "운영 / 위생 비품", middle: "청소용품", name: "고무장갑", location: "사무실" },
       { major: "운영 / 위생 비품", middle: "세탁용품", name: "세탁세제", location: "사무실" },
       { major: "운영 / 위생 비품", middle: "세탁용품", name: "섬유유연제", location: "사무실" },
-      { major: "운영 / 위생 비품", middle: "운영 사무용", name: "영수증용지", location: "사무실" },
+      { major: "운영 / 위생 비품", middle: "운영 사무용", name: "영수증 용지", location: "사무실" },
       { major: "운영 / 위생 비품", middle: "운영 사무용", name: "포스터", location: "사무실" },
     ];
 
@@ -766,7 +779,6 @@
       renderSubCategoryChips();
       renderItems();
       showScreen("result");
-      setTimeout(() => resultSearch.focus(), 120);
     }
 
     function renderCategories() {
